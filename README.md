@@ -23,7 +23,7 @@ You'll need to have **Python 3.8 or newer** and **pip** installed.
 2.  Navigate into the project directory:
 
     ```bash
-    cd plant-disease-detection
+    cd PLANT
     ```
 
 3.  Install all the required Python libraries using the `requirements.txt` file:
