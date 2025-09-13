@@ -1,14 +1,16 @@
-Plant Disease Detection
+# Plant Disease Detection
+
 A machine learning application for detecting diseases in plants using computer vision and deep learning techniques. This project uses image classification to identify various plant diseases, helping farmers and agricultural professionals make informed decisions about crop health.
-Features
 
-Real-time Disease Detection: Upload plant images to get instant disease predictions
-Multiple Disease Classification: Supports detection of various plant diseases
-User-friendly Interface: Simple web application for easy interaction
-High Accuracy: Trained deep learning model for reliable predictions
-Preprocessing Pipeline: Automated image preprocessing for optimal results
+## Features
 
-Project Structure
+- **Real-time Disease Detection**: Upload plant images to get instant disease predictions
+- **Multiple Disease Classification**: Supports detection of various plant diseases
+- **User-friendly Interface**: Simple web application for easy interaction
+- **High Accuracy**: Trained deep learning model for reliable predictions
+- **Preprocessing Pipeline**: Automated image preprocessing for optimal results
+
+## Project Structure
 plant-disease-detection/
 │
 ├── README.md                         # Project documentation
@@ -24,19 +26,21 @@ plant-disease-detection/
 │   ├── image_preprocessing.py       # Image preprocessing utilities
 │   └── inference.py                 # Inference utilities
 └── docs/
-    └── usage.md                     # Detailed usage documentation
-Getting Started
-Prerequisites
+└── usage.md                     # Detailed usage documentation
 
-Python 3.8 or higher
-pip (Python package installer)
-Virtual environment (recommended)
+## Getting Started
 
-Installation
+### Prerequisites
 
-Clone the repository
+- Python 3.8 or higher
+- pip (Python package installer)
+- Virtual environment (recommended)
 
-bash   git clone https://github.com/your-username/plant-disease-detection.git
+### Installation
+
+1. **Clone the repository**
+```bash
+   git clone https://github.com/your-username/plant-disease-detection.git
    cd plant-disease-detection
 
 Create a virtual environment
