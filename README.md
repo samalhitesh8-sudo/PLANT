@@ -1,6 +1,6 @@
 # 🌿 Plant Disease Detection
 
-This project provides a deep learning-based solution to detect and classify diseases in plant leaves. The core of the system is a pre-trained neural network model, which is fine-tuned on a custom dataset of plant images. The project also includes a user-friendly web application built with Flask, allowing anyone to upload an image and get an instant disease prediction.
+This project provides a deep learning-based solution to detect and classify diseases in plant leaves. The core of the system is a pre-trained neural network model, which is fine-tuned on a custom dataset of plant images. The project also includes a user-friendly web application built with **Streamlit**, allowing anyone to upload an image and get an instant disease prediction.
 
 ---
 
@@ -36,17 +36,17 @@ You'll need to have **Python 3.8 or newer** and **pip** installed.
 
 ## 💡 Usage
 
-### Running the Web Application
+### Running the Streamlit Web Application
 
-The easiest way to use the model is through the web application.
+The easiest way to use the model is through the Streamlit web application.
 
-1.  Start the Flask server from the project's root directory:
+1.  Start the Streamlit app from the project's root directory:
 
     ```bash
-    python app.py
+    streamlit run app.py
     ```
 
-2.  Open your web browser and go to `http://127.0.0.1:5000`.
+2.  Your default web browser will automatically open and navigate to the application. If not, open your browser and go to `http://localhost:8501`.
 
 3.  Upload an image of a plant leaf. The application will use the pre-trained model to predict the disease and display the result on the screen.
 
@@ -68,7 +68,7 @@ This script will train a new model and save it as `saved_model.h5` in the `model
 
 ## 📁 Project Structure
 
-* `app.py`: The main Flask application that serves the web interface.
+* `app.py`: The main **Streamlit** application that serves the web interface.
 * `model/`: Contains the trained deep learning model (`saved_model.h5`) and the script used for training (`model_training.py`).
 * `data/`: Holds the dataset of plant images and their corresponding labels (`dataset_labels.csv`).
 * `utils/`: Includes utility scripts for image preprocessing (`image_preprocessing.py`) and model inference (`inference.py`).
@@ -87,4 +87,3 @@ We welcome contributions! If you'd like to help, please follow these steps:
 5.  Open a Pull Request.
 
 ---
-
