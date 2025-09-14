@@ -1,84 +1,101 @@
-import os
-import numpy as np
-import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from tensorflow.keras.applications.vgg16 import VGG16
-from sklearn.model_selection import train_test_split
+from tensorflow import keras
+from tensorflow.keras import layers
+import os
 
-
-DATASET_PATH = '../data/dataset/'
+# --- Configuration ---
 IMG_SIZE = 128
 BATCH_SIZE = 32
 EPOCHS = 10
+DATA_DIR = 'data/dataset/' # Updated path to be relative to the script's location
+SAVE_PATH = 'model/saved_model.h5'
+VALIDATION_SPLIT = 0.2
 
-
-labels_df = pd.read_csv('../data/dataset_labels.csv')  
-
-
-file_paths = []
-labels = []
-
-for index, row in labels_df.iterrows():
-    filename = row['filename']
-    label = row['label']
-    file_paths.append(os.path.join(DATASET_PATH, filename))
-    labels.append(label)
-
-
-from sklearn.preprocessing import LabelEncoder
-le = LabelEncoder()
-labels_encoded = le.fit_transform(labels)
-
-
-train_paths, val_paths, train_labels, val_labels = train_test_split(
-    file_paths, labels_encoded, test_size=0.2, stratify=labels_encoded, random_state=42)
-
-train_datagen = ImageDataGenerator(rescale=1./255, rotation_range=20, zoom_range=0.2)
-val_datagen = ImageDataGenerator(rescale=1./255)
-
-def data_generator(file_paths, labels, datagen):
-    while True:
-        for i in range(0, len(file_paths), BATCH_SIZE):
-            batch_paths = file_paths[i:i+BATCH_SIZE]
-            batch_labels = labels[i:i+BATCH_SIZE]
-            images = []
-            for path in batch_paths:
-                img = tf.keras.preprocessing.image.load_img(path, target_size=(IMG_SIZE, IMG_SIZE))
-                img_array = tf.keras.preprocessing.image.img_to_array(img)
-                images.append(img_array)
-            images = np.array(images)
-            batch_labels = np.array(batch_labels)
-            yield datagen.flow(images, batch_labels, batch_size=BATCH_SIZE).__next__()
-
-
-base_model = VGG16(weights='imagenet', include_top=False, input_shape=(IMG_SIZE, IMG_SIZE, 3))
-for layer in base_model.layers:
-    layer.trainable = False
-
-model = Sequential([
-    base_model,
-    Flatten(),
-    Dense(256, activation='relu'),
-    Dropout(0.5),
-    Dense(len(le.classes_), activation='softmax')
-])
-
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-
-steps_per_epoch = len(train_paths) // BATCH_SIZE
-validation_steps = len(val_paths) // BATCH_SIZE
-
-model.fit(
-    data_generator(train_paths, train_labels, train_datagen),
-    steps_per_epoch=steps_per_epoch,
-    epochs=EPOCHS,
-    validation_data=data_generator(val_paths, val_labels, val_datagen),
-    validation_steps=validation_steps
+# --- 1. Create a tf.data.Dataset ---
+# This single function replaces the manual CSV parsing, path joining,
+# label encoding, and train/test splitting.
+print("Loading data...")
+train_ds = tf.keras.utils.image_dataset_from_directory(
+    DATA_DIR,
+    validation_split=VALIDATION_SPLIT,
+    subset="training",
+    seed=42,
+    image_size=(IMG_SIZE, IMG_SIZE),
+    batch_size=BATCH_SIZE
 )
+
+val_ds = tf.keras.utils.image_dataset_from_directory(
+    DATA_DIR,
+    validation_split=VALIDATION_SPLIT,
+    subset="validation",
+    seed=42,
+    image_size=(IMG_SIZE, IMG_SIZE),
+    batch_size=BATCH_SIZE
+)
+
+CLASS_NAMES = train_ds.class_names
+NUM_CLASSES = len(CLASS_NAMES)
+print(f"Found {NUM_CLASSES} classes: {CLASS_NAMES}")
+
+# --- 2. Configure Dataset for Performance ---
+# .cache() keeps images in memory after the first epoch.
+# .prefetch() overlaps data preprocessing and model execution.
+AUTOTUNE = tf.data.AUTOTUNE
+train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
+val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+
+# --- 3. Build the Model ---
+# We now use Keras layers for data augmentation, which run on the GPU.
+data_augmentation = keras.Sequential(
+    [
+        layers.RandomFlip("horizontal", input_shape=(IMG_SIZE, IMG_SIZE, 3)),
+        layers.RandomRotation(0.2),
+        layers.RandomZoom(0.2),
+    ],
+    name="data_augmentation"
+)
+
+# Load the VGG16 base model
+base_model = tf.keras.applications.VGG16(
+    weights='imagenet',
+    include_top=False,
+    input_shape=(IMG_SIZE, IMG_SIZE, 3)
+)
+base_model.trainable = False # Freeze the base model
+
+# Create the final model by chaining the layers using the Functional API
+inputs = keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
+x = data_augmentation(inputs)
+x = tf.keras.applications.vgg16.preprocess_input(x) # VGG16-specific preprocessing
+x = base_model(x, training=False)
+x = layers.Flatten()(x)
+x = layers.Dense(256, activation='relu')(x)
+x = layers.Dropout(0.5)(x)
+outputs = layers.Dense(NUM_CLASSES, activation='softmax')(x)
+model = keras.Model(inputs, outputs)
+
+# --- 4. Compile the Model ---
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+model.summary()
+
+# --- 5. Train the Model ---
+# The .fit method can directly consume the tf.data.Dataset objects
+print(f"Starting training for {EPOCHS} epochs...")
+history = model.fit(
+    train_ds,
+    epochs=EPOCHS,
+    validation_data=val_ds
+)
+
+# --- 6. Save the Final Model ---
+print(f"Training complete. Saving model to {SAVE_PATH}")
+model.save(SAVE_PATH)
+print("Model trained and saved successfully!")
 
 
 model.save('../model/saved_model.h5')
