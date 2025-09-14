@@ -5,11 +5,11 @@ from sklearn.preprocessing import LabelEncoder
 import os
 from utils.image_preprocessing import prepare_image
 
-# Load the trained model
+
 model_path = os.path.join(os.path.dirname(__file__), '..', 'model', 'saved_model.h5')
 model = tf.keras.models.load_model(model_path)
 
-# Load label encoder
+
 labels_csv = os.path.join(os.path.dirname(__file__), '..', 'data', 'dataset_labels.csv')
 import pandas as pd
 labels_df = pd.read_csv(labels_csv)
